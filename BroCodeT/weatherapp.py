@@ -1,9 +1,15 @@
 import sys
 import requests
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QLabel, QLineEdit,
-    QPushButton, QVBoxLayout)
+    QApplication,
+    QWidget,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+)
 from PyQt5.QtCore import Qt
+
 
 class WeatherApp(QWidget):
     def __init__(self):
@@ -12,14 +18,14 @@ class WeatherApp(QWidget):
         self.city_input = QLineEdit(self)
         self.get_weather_button = QPushButton("Get Weather", self)
         self.temperature_label = QLabel(self)
-        self.emoji_label = QLabel("☀️", self)  
-        self.emoji_label.setMinimumHeight(120) 
+        self.emoji_label = QLabel("☀️", self)
+        self.emoji_label.setMinimumHeight(120)
         self.description_label = QLabel(self)
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle("Weather App")
-        self.resize(400, 500) 
+        self.resize(400, 500)
 
         vbox = QVBoxLayout()
 
@@ -44,7 +50,8 @@ class WeatherApp(QWidget):
         self.emoji_label.setObjectName("emoji_label")
         self.description_label.setObjectName("description_label")
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QLabel, QPushButton {
                 font-family: Calibri;
             }
@@ -71,14 +78,17 @@ class WeatherApp(QWidget):
             QLabel#description_label {
                 font-size: 50px;
             }
-        """)
+        """
+        )
 
         self.get_weather_button.clicked.connect(self.get_weather)
 
     def get_weather(self):
         api_key = "8d2f04e26f1fabc7be1baa99e8bb2665"
         city = self.city_input.text()
-        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
+        url = (
+            f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
+        )
 
         try:
             response = requests.get(url)
@@ -159,6 +169,7 @@ class WeatherApp(QWidget):
             return "☁️"
         else:
             return ""
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
