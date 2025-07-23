@@ -1,55 +1,81 @@
+"""
+Secure Notepad Application
+It allows creating, viewing, and updating notes from the command line.
+"""
 
 from typing import Optional
 
 
 class Note:
+    """
+    Stores note ID and the content encoded as bytes.
+    Represents a single note.
+    """
+
     def __init__(self, note_id: int, content: str) -> None:
+        """
+        Initialize a new Note with an ID and content.
+        """
         self.id: int = note_id
         self._encoded_content: bytes = content.encode("utf-8")
 
     def get_content(self) -> str:
+        """
+        Decode and return the note content as a string.
+        """
         return self._encoded_content.decode("utf-8")
 
     def update_content(self, new_content: str) -> None:
+        """
+        Update the note content and re-encode it.
+        """
         self._encoded_content = new_content.encode("utf-8")
 
+
 class SecureNotepad:
-    def __init__(self):
+    """
+    Handles creating, viewing, and updating notes with auto-generated IDs.
+    """
+
+    def __init__(self) -> None:
+        """Initialize an empty notepad with an ID counter."""
         self.notes: dict[int, Note] = {}
         self.next_id: int = 1
 
     def create_note(self, content: str) -> int:
-        note = Note(self.next_id, content)        
-        self.notes[self.next_id] = note           
-        self.next_id += 1                       
+        """
+        Create a new note and store it.
+        """
+        note = Note(self.next_id, content)
+        self.notes[self.next_id] = note
+        self.next_id += 1
         return note.id
 
     def view_note(self, note_id: int) -> Optional[str]:
-        note = self.notes.get(note_id)  
+        """
+        Get the content of a note by ID.
+        """
+        note = self.notes.get(note_id)
         if note is None:
-            return None                 
+            return None
         return note.get_content()
 
     def update_note(self, note_id: int, new_content: str) -> bool:
-        note = self.notes.get(note_id)       
+        """
+        Update the content of a note by ID.
+        """
+        note = self.notes.get(note_id)
         if note is None:
-            return False                     
+            return False
         note.update_content(new_content)
         return True
 
 
-
-
-
-#note = Note(1, "Drink water")
-#print(note.get_content())
-
-#note.update_content("Buy milk")
-#print(note.get_content())
-
-
-
 def main() -> None:
+    """
+    Handles user input for creating, viewing, updating,
+    and listing notes until the user chooses to exit.
+    """
     notepad = SecureNotepad()
     while True:
         print("\n--- Secure Notepad ---")
@@ -102,6 +128,7 @@ def main() -> None:
 
         else:
             print("Invalid option. Try again.")
+
 
 if __name__ == "__main__":
     main()
