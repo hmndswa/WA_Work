@@ -3,33 +3,8 @@ Secure Notepad Application
 It allows creating, viewing, and updating notes from the command line.
 """
 
+import sqlite3
 from typing import Optional
-
-
-class Note:
-    """
-    Stores note ID and the content encoded as bytes.
-    Represents a single note.
-    """
-
-    def __init__(self, note_id: int, content: str) -> None:
-        """
-        Initialize a new Note with an ID and content.
-        """
-        self.id: int = note_id
-        self._encoded_content: bytes = content.encode("utf-8")
-
-    def get_content(self) -> str:
-        """
-        Decode and return the note content as a string.
-        """
-        return self._encoded_content.decode("utf-8")
-
-    def update_content(self, new_content: str) -> None:
-        """
-        Update the note content and re-encode it.
-        """
-        self._encoded_content = new_content.encode("utf-8")
 
 
 class SecureNotepad:
@@ -38,37 +13,87 @@ class SecureNotepad:
     """
 
     def __init__(self) -> None:
-        """Initialize an empty notepad with an ID counter."""
-        self.notes: dict[int, Note] = {}
-        self.next_id: int = 1
+        """
+        Connects to SQLite Database and ensures if the notes table exists.
+        """
+        self.connection = sqlite3.connect("notes.db")
+        self.cursor = self.connection.cursor()
+        self._create_table()
+
+    def _create_table(self) -> None:
+        """
+        Create notes table if it doesnt exist.
+        """
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                content BLOB NOT NULL
+            )
+        """
+        )
+        self.connection.commit()
 
     def create_note(self, content: str) -> int:
         """
-        Create a new note and store it.
+        Create a new note, store it in the database and return its ID
         """
-        note = Note(self.next_id, content)
-        self.notes[self.next_id] = note
-        self.next_id += 1
-        return note.id
+        encoded = content.encode("utf-8")
+        self.cursor.execute("INSERT INTO notes (content) VALUES (?)", (encoded,))
+        self.connection.commit()
+        return self.cursor.lastrowid
 
     def view_note(self, note_id: int) -> Optional[str]:
         """
-        Get the content of a note by ID.
+        Get the content of a note from the database based on its ID.
+
+        Args:
+            note_id: ID of note to view
+
+        Returns:
+            Decoded note as a string if found if not NONE.
         """
-        note = self.notes.get(note_id)
-        if note is None:
+        self.cursor.execute("SELECT content FROM notes WHERE id = ?", (note_id,))
+        row = self.cursor.fetchone()
+
+        if row is None:
             return None
-        return note.get_content()
+        return row[0].decode("utf-8")
 
     def update_note(self, note_id: int, new_content: str) -> bool:
         """
-        Update the content of a note by ID.
+        Update the content of a note by ID in database.
+
+        Args:
+            note_id: ID of the note to update
+            new_content: New content to store
+
+        Returns:
+            True if note was updated and False if not.
         """
-        note = self.notes.get(note_id)
-        if note is None:
-            return False
-        note.update_content(new_content)
-        return True
+        encoded = new_content.encode("utf-8")
+        self.cursor.execute(
+            "UPDATE notes SET content = ? WHERE id = ?", (encoded, note_id)
+        )
+        self.connection.commit()
+        return self.cursor.rowcount > 0
+
+    def list_notes(self) -> None:
+        """
+        List all notes from the database, sorted by ID (ascending).
+        """
+        self.cursor.execute("SELECT id, content FROM notes ORDER BY id ASC")
+        rows = self.cursor.fetchall()
+
+        if not rows:
+            print("No notes found.")
+        else:
+            for note_id, content in rows:
+                print(f"{note_id}: {content.decode('utf-8')}")
+
+    def close(self) -> None:
+        """Close the SQLite connection."""
+        self.connection.close()
 
 
 def main() -> None:
@@ -116,14 +141,11 @@ def main() -> None:
                 print("Invalid ID.")
 
         elif choice == "4":
-            if not notepad.notes:
-                print("No notes found.")
-            else:
-                for note_id, note in notepad.notes.items():
-                    print(f"{note_id}: {note.get_content()}")
+            notepad.list_notes()
 
         elif choice == "5":
             print("Exiting Secure Notepad.")
+            notepad.close()
             break
 
         else:
