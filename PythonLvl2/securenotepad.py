@@ -91,6 +91,20 @@ class SecureNotepad:
             for note_id, content in rows:
                 print(f"{note_id}: {content.decode('utf-8')}")
 
+    def delete_note(self, note_id: int) -> bool:
+        """
+        Delete a note by its ID.
+
+        Args:
+            note_id: ID of the note to delete
+
+        Returns:
+            True if a note was deleted, False otherwise.
+        """
+        self.cursor.execute("DELETE FROM notes WHERE id = ?", (note_id,))
+        self.connection.commit()
+        return self.cursor.rowcount > 0
+
     def close(self) -> None:
         """Close the SQLite connection."""
         self.connection.close()
@@ -108,7 +122,8 @@ def main() -> None:
         print("2. View Note")
         print("3. Update Note")
         print("4. List Notes")
-        print("5. Exit")
+        print("5. Delete Notes")
+        print("6. Exit")
 
         choice = input("Choose an option: ")
 
@@ -144,6 +159,17 @@ def main() -> None:
             notepad.list_notes()
 
         elif choice == "5":
+            try:
+                note_id = int(input("Enter note ID to delete: "))
+                deleted = notepad.delete_note(note_id)
+                if deleted:
+                    print("Note deleted.")
+                else:
+                    print("Note not found.")
+            except ValueError:
+                print("Invalid ID.")
+
+        elif choice == "6":
             print("Exiting Secure Notepad.")
             notepad.close()
             break
